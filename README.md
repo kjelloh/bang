@@ -44,3 +44,25 @@ This process repeats until compiler does not report missing header file, or the 
 
 NOTE: This is a proof of concept and quick and dirty C++ console app code (although in conan package manager file and directory structure).
 
+Example:
+```
+kjell-olovhogdahl@MacBook-Pro ~/Documents/GitHub/bang % ./build/Release/bang /Users/kjell-olovhogdahl/Documents/GitHub/cratchit/src/main.cpp
+bang/0.1: Hello World Release!
+  bang/0.1: __aarch64__ defined
+  bang/0.1: __cplusplus201703
+  bang/0.1: __GNUC__4
+  bang/0.1: __GNUC_MINOR__2
+  bang/0.1: __clang_major__16
+  bang/0.1: __apple_build_version__16000026
+bang/0.1 test_package
+
+Executing: "clang++ -H /Users/kjell-olovhogdahl/Documents/GitHub/cratchit/src/main.cpp 2>&1"
+Missing header: lua.hpp
+Found header at: /Users/kjell-olovhogdahl/Documents/GitHub/cratchit/Xcode/lua-src/src/lua.hpp
+try:"clang++ -H -I/Users/kjell-olovhogdahl/Documents/GitHub/cratchit/Xcode/lua-src/src"
+Executing: "clang++ -H -I/Users/kjell-olovhogdahl/Documents/GitHub/cratchit/Xcode/lua-src/src /Users/kjell-olovhogdahl/Documents/GitHub/cratchit/src/main.cpp 2>&1"
+Missing header: dummy.hpp
+Header file not found in the project directories.%                                                                                                                                                                    kjell-olovhogdahl@MacBook-Pro ~/Documents/GitHub/bang % 
+
+```
+

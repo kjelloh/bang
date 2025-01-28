@@ -85,7 +85,6 @@ namespace bang {
     while (true) {
         // Step 1: Run clang++ -H to see the header search process
         std::string output = runClangH(command_head,cppFile);
-        output = runClangH(command_head,cppFile);
 
         // Step 2: Find if a header file is missing
         if (auto missingHeader = findMissingHeader(output); false == missingHeader.empty()) {
