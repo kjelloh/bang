@@ -13,6 +13,7 @@ bang © 2025 by Kjell-Olov Högdal is licensed under Creative Commons Attributio
 ├── LICENSE
 ├── README.md
 ├── conanfile.py
+├── init_tool_chain.zsh
 ├── src
 │   ├── bang.cpp
 │   ├── bang.h
