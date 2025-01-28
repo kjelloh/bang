@@ -23,9 +23,17 @@ bang © 2025 by Kjell-Olov Högdal is licensed under Creative Commons Attributio
 
 # build
 
-```
+This project supports Cmake and Conan package manager.
+
+If you have those installed the following is the proposed build method.
 
 ```
+conan install . --build=missing
+cmake --preset conan-release
+cmake --build build/Release
+```
+
+NOTE: Also see init_tool_chain.zsh if applicable to your platform
 
 ## 0.1
 
