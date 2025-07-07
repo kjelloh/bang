@@ -1,12 +1,15 @@
-// conan/cmake framewrok
+// conan/cmake framework
 CMakeUserPresets.json
 
-
-// Project environment
+// Project specific
 build/
 workspace/
-preset.txt
+cmake_preset.txt
 
+// Claude AI tooling
 
-// CLion environment
+// VSCode IDE
+.vscode/
+
+// CLion IDE
 .idea/

@@ -16,9 +16,13 @@ class bangRecipe(ConanFile):
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
+    
+    # Add GoogleTest as a dependency  
+    def requirements(self):
+        self.requires("gtest/1.14.0")
 
     # Sources are located in the same place as this recipe, copy them to the recipe
-    exports_sources = "CMakeLists.txt", "src/*"
+    exports_sources = "CMakeLists.txt", "src/*", "tests/*"
 
     def layout(self):
         cmake_layout(self)

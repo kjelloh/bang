@@ -5,111 +5,205 @@
 #include <cstdlib>
 #include <filesystem>
 #include <vector>
+#include <map>
 
 namespace bang {
 
     namespace fs = std::filesystem;
 
-    // Function to invoke clang++ with the -H flag and capture its output
-    std::string runClangH(const std::string& command_head, const std::string& cppFile) {
-    std::string command = command_head + " " + cppFile + " 2>&1";  // Redirect stderr to stdout
-    std::string result;
-    
-    std::cout << "\nExecuting: " << std::quoted(command);
-    
-    // Open a pipe to the clang++ command
-    FILE* pipe = popen(command.c_str(), "r");
-    if (!pipe) {
-        std::cerr << "\nFailed to open pipe\n";
-        exit(1);
-    }
-    
-    // Read the output of the command
-    char buffer[128];
-    size_t totalBytesRead = 0;
-    
-    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-        totalBytesRead += strlen(buffer);
-        result += buffer;
-    }
-    
-    if (totalBytesRead == 0) {
-        std::cerr << "No output read from the pipe.\n";
-    }
-    
-    pclose(pipe);
-    return result;
-    }
-
-    // Function to check if the output contains a 'file not found' error
-    std::string findMissingHeader(const std::string& output) {
-    std::string errorPrefix = "fatal error: '";
-    size_t pos = output.find(errorPrefix);
-    if (pos != std::string::npos) {
-        size_t start = pos + errorPrefix.length();
-        size_t end = output.find("' file not found", start);
-        if (end != std::string::npos) {
-        return output
-            .substr(start, end - start);  // Return the missing header filename
-        }
-    }
-    return "";
-    }
-
-    // Function to search for the header file in the directory structure
-    std::string searchForHeader(const std::string& cppFile,
-                                const std::string& missingHeader) {
-    fs::path cppPath(cppFile);
-    fs::path parentDir = cppPath.parent_path();  // Directory where the .cpp file is located
+    // Tweak class - aggregates arguments and options
+    class Tweak {
+    private:
+        std::vector<std::string> arguments;  // like "-I/path/to/headers"
+        std::map<std::string, bool> options; // like {"-H": true, "-v": false}
         
-    // Traverse directories around the cpp file (e.g., the parent directory and subdirectories)
-    for (const auto& entry : fs::recursive_directory_iterator(parentDir.parent_path())) {
-        if (entry.is_regular_file() && entry.path().filename() == missingHeader) {
-        return entry.path().string();
+    public:
+        Tweak() {
+            // Default options for C++ compilation
+            options["-H"] = true;  // Show header includes
         }
-    }
-    return "";  // Return an empty string if the header is not found
-    }
-
-    // Main function that orchestrates the process
-    int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <path_to_cpp_file>\n";
-        return 1;
-    }
-
-    std::string cppFile = argv[1];
-    
-    std::string command_head = "clang++ -H";
-    
-    while (true) {
-        // Step 1: Run clang++ -H to see the header search process
-        std::string output = runClangH(command_head,cppFile);
-
-        // Step 2: Find if a header file is missing
-        if (auto missingHeader = findMissingHeader(output); false == missingHeader.empty()) {
-        std::cout << "\nMissing header: " << missingHeader;
         
-        // Step 3: Search for the missing header in the directory structure
-        std::string foundHeaderPath = searchForHeader(cppFile, missingHeader);
-        if (!foundHeaderPath.empty()) {
-            std::cout << "\nFound header at: " << foundHeaderPath;
+        void addArgument(const std::string& arg) {
+            arguments.push_back(arg);
+        }
+        
+        void setOption(const std::string& opt, bool value) {
+            options[opt] = value;
+        }
+        
+        std::string buildCommandLine() const {
+            std::string cmd;
             
-            // Step 4: Re-run clang++ with the correct include path
-            command_head += std::string{" -I"} + fs::path(foundHeaderPath).parent_path().string();
-            std::cout << "\ntry:" << std::quoted(command_head);
-        } else {
-            std::cerr << "\nHeader file not found in the project directories.";
-            break;
+            // Add options
+            for (const auto& [option, enabled] : options) {
+                if (enabled) {
+                    cmd += option + " ";
+                }
+            }
+            
+            // Add arguments
+            for (const auto& arg : arguments) {
+                cmd += arg + " ";
+            }
+            
+            return cmd;
         }
-        }
-        else {
-        std::cout << "\nNo missing headers detected.";
-        break;
-        }
-    }
         
-    return 0;
+        const std::vector<std::string>& getArguments() const { return arguments; }
+        const std::map<std::string, bool>& getOptions() const { return options; }
+    };
+
+    // ErrorTransformer - implements t(error, tweaks) → tweaks
+    class ErrorTransformer {
+    public:
+        Tweak transform(const std::string& error, const Tweak& currentTweak, const std::string& inputFile) {
+            Tweak newTweak = currentTweak;
+            
+            // Look for missing header errors
+            std::string missingHeader = findMissingHeader(error);
+            if (!missingHeader.empty()) {
+                std::string headerPath = searchForHeader(inputFile, missingHeader);
+                if (!headerPath.empty()) {
+                    fs::path includePath = fs::path(headerPath).parent_path();
+                    newTweak.addArgument("-I" + includePath.string());
+                }
+            }
+            
+            return newTweak;
+        }
+        
+    private:
+        std::string findMissingHeader(const std::string& output) {
+            std::string errorPrefix = "fatal error: '";
+            size_t pos = output.find(errorPrefix);
+            if (pos != std::string::npos) {
+                size_t start = pos + errorPrefix.length();
+                size_t end = output.find("' file not found", start);
+                if (end != std::string::npos) {
+                    return output.substr(start, end - start);
+                }
+            }
+            return "";
+        }
+        
+        std::string searchForHeader(const std::string& cppFile, const std::string& missingHeader) {
+            fs::path cppPath(cppFile);
+            fs::path parentDir = cppPath.parent_path();
+            
+            for (const auto& entry : fs::recursive_directory_iterator(parentDir.parent_path())) {
+                if (entry.is_regular_file() && entry.path().filename() == missingHeader) {
+                    return entry.path().string();
+                }
+            }
+            return "";
+        }
+    };
+
+    // Banger class - encapsulates the banging strategy
+    class Banger {
+    private:
+        std::string command;
+        Tweak currentTweak;
+        ErrorTransformer transformer;
+        
+    public:
+        Banger(const std::string& cmd) : command(cmd) {}
+        
+        bool bang(const std::string& inputFile, std::string& output) {
+            std::string fullCommand = command + " " + currentTweak.buildCommandLine() + inputFile + " 2>&1";
+            
+            std::cout << "\nExecuting: " << std::quoted(fullCommand);
+            
+            // Execute command
+            output = executeCommand(fullCommand);
+            
+            // Check if successful (no missing header errors)
+            if (transformer.transform(output, currentTweak, inputFile).getArguments().size() == 
+                currentTweak.getArguments().size()) {
+                // No new tweaks needed - success!
+                return true;
+            }
+            
+            // Transform error into new tweaks
+            Tweak newTweak = transformer.transform(output, currentTweak, inputFile);
+            if (newTweak.getArguments().size() > currentTweak.getArguments().size()) {
+                currentTweak = newTweak;
+                return false; // Try again with new tweaks
+            }
+            
+            // No more tweaks possible
+            return true;
+        }
+        
+    private:
+        std::string executeCommand(const std::string& command) {
+            std::string result;
+            FILE* pipe = popen(command.c_str(), "r");
+            if (!pipe) {
+                std::cerr << "\nFailed to open pipe\n";
+                return result;
+            }
+            
+            char buffer[128];
+            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+                result += buffer;
+            }
+            
+            pclose(pipe);
+            return result;
+        }
+    };
+
+    // Refactored main function using the new banging strategy
+    int main(int argc, char* argv[]) {
+        if (argc != 2) {
+            std::cerr << "Usage: " << argv[0] << " <path_to_cpp_file>\n";
+            return 1;
+        }
+
+        std::string cppFile = argv[1];
+        
+        // Create a banger for C++ compilation
+        Banger cppBanger("clang++");
+        
+        std::string output;
+        int maxAttempts = 10;  // Prevent infinite loops
+        int attempts = 0;
+        
+        std::cout << "\nBanging C++ compilation for: " << cppFile;
+        
+        while (attempts < maxAttempts) {
+            attempts++;
+            
+            if (cppBanger.bang(cppFile, output)) {
+                std::cout << "\nBanging successful after " << attempts << " attempts!";
+                std::cout << "\nNo missing headers detected.";
+                break;
+            }
+            
+            // Check if we found a missing header to continue
+            if (output.find("' file not found") != std::string::npos) {
+                size_t pos = output.find("fatal error: '");
+                if (pos != std::string::npos) {
+                    size_t start = pos + 14; // length of "fatal error: '"
+                    size_t end = output.find("' file not found", start);
+                    if (end != std::string::npos) {
+                        std::string missingHeader = output.substr(start, end - start);
+                        std::cout << "\nMissing header: " << missingHeader;
+                        // The banger will try to find and add the include path
+                    }
+                }
+            } else {
+                std::cout << "\nNo more missing headers found, but compilation may have other issues.";
+                break;
+            }
+        }
+        
+        if (attempts >= maxAttempts) {
+            std::cerr << "\nStopped after " << maxAttempts << " attempts.";
+        }
+        
+        return 0;
     }
 
     // conan generated bang() test method (renamed)
