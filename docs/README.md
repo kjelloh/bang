@@ -1,10 +1,35 @@
 # bang
 
-A C++ compiler utiliser to iterate cpp-file-compile command with new arguments until it compiles
+A command-line tool that **"bangs" system commands** - automatically searching for the right tweaks to make any command succeed.
+
+*NOTE: Currently experimental for 'banging' C++ compilation regarding include search paths*
+
+## What is "Banging" a Command?
+
+`bang` implements the concept: `f(in, tweaks) → out` where:
+- `f` = any operating system command/function
+- `in` = input file(s)  
+- `tweaks` = (arguments, options) that modify how `f` operates
+- `out` = output file(s)
+
+**The "Banging" Process:**
+1. `bang` tries `f(in, tweaks)` with initial tweaks
+2. If it fails, `bang` analyzes the error and intelligently updates tweaks using: `t(error, tweaks) → tweaks`
+3. `bang` keeps "banging" (trying different tweak combinations) until the command succeeds
+
+**Current Implementation:**
+- `bang` can "bang" C++ compilation - it keeps trying different compiler tweaks until your code compiles successfully
+
+**Future Vision:**
+- `bang` could "bang" any system command (ffmpeg, pandoc, etc.) until it produces the desired output
+
+Instead of manually struggling with complex command-line tools, you just tell `bang` what you want to achieve, and it "bangs" the command until it figures out how to make it work.
 
 bang © 2025 by Kjell-Olov Högdal is licensed under Creative Commons Attribution 4.0 International. To view a copy of this license, visit https://creativecommons.org/licenses/by/4.0/
 
-Also, I would like 'bang' or additional tooling for C++ development to model and understand the C++ executable binary build and run in tiers of 'transformation'?
+# banging the C++ compiler
+
+I would like 'bang' or additional tooling for C++ development to model and understand the C++ executable binary build and run in tiers of 'transformation'?
 
 * C++ preprocessor
 * C++ translation unit
@@ -14,7 +39,7 @@ Also, I would like 'bang' or additional tooling for C++ development to model and
 
 idea: A functional model of 'C++ source code' -> 'Operating system execution' should encapsulate each step as a function f: in -> out?
 
-# Investigations
+## Investigations
 
 * [Understanding linking](linking_understanding/README.md)
 
