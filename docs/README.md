@@ -1,28 +1,16 @@
 # bang
-C++ compiler utiliser to iterate cpp-file-compile command with new arguments until it compiles
+
+A C++ compiler utiliser to iterate cpp-file-compile command with new arguments until it compiles
 
 bang © 2025 by Kjell-Olov Högdal is licensed under Creative Commons Attribution 4.0 International. To view a copy of this license, visit https://creativecommons.org/licenses/by/4.0/
 
-* Cmake support through CMakeLists.txt
-* Conan package manager support and directory structure (from 'conan new cmake_exe ...' template)
+# Investigations
 
-```
-.
-├── CMakeLists.txt
-├── CMakeUserPresets.json
-├── LICENSE
-├── README.md
-├── conanfile.py
-├── init_tool_chain.zsh
-├── src
-│   ├── bang.cpp
-│   ├── bang.h
-│   └── main.cpp
-└── test_package
-    └── conanfile.py
-```
+* [Understanding linking](linking_understanding/README.md)
 
 # build
+
+## conan/cmake framework
 
 This project supports Cmake and Conan package manager.
 
@@ -35,6 +23,92 @@ cmake --build build/Release
 ```
 
 NOTE: Also see init_tool_chain.zsh if applicable to your platform
+
+* Cmake support through CMakeLists.txt
+* Conan package manager support and directory structure (from 'conan new cmake_exe ...' template)
+
+## Project tracked files
+
+```
+.
+├── CMakeLists.txt
+├── LICENSE
+├── README.md
+├── _config.yml
+├── conanfile.py
+├── docs
+│   ├── README.md
+│   └── linking_understanding
+│       ├── README.md
+│       ├── chatgpt-qa-linking-phases.md
+│       ├── claude-code-qa-linking-stages.md
+│       └── image.png
+├── index.md
+├── init_tool_chain.zsh
+├── src
+│   ├── bang.cpp
+│   ├── bang.h
+│   └── main.cpp
+```
+
+The cmake support is produced by conan in the build folder with a sub-folder for the build type.
+
+## build folder example (Release built type)
+
+```
+├── build
+│   └── Release
+│       ├── CMakeCache.txt
+│       ├── CMakeFiles
+│       │   ├── 3.30.5
+│       │   │   ├── CMakeCXXCompiler.cmake
+│       │   │   ├── CMakeDetermineCompilerABI_CXX.bin
+│       │   │   ├── CMakeSystem.cmake
+│       │   │   └── CompilerIdCXX
+│       │   │       ├── CMakeCXXCompilerId.cpp
+│       │   │       ├── CMakeCXXCompilerId.o
+│       │   │       └── tmp
+│       │   ├── CMakeConfigureLog.yaml
+│       │   ├── CMakeDirectoryInformation.cmake
+│       │   ├── CMakeScratch
+│       │   ├── Makefile.cmake
+│       │   ├── Makefile2
+│       │   ├── TargetDirectories.txt
+│       │   ├── bang.dir
+│       │   │   ├── DependInfo.cmake
+│       │   │   ├── build.make
+│       │   │   ├── cmake_clean.cmake
+│       │   │   ├── compiler_depend.internal
+│       │   │   ├── compiler_depend.make
+│       │   │   ├── compiler_depend.ts
+│       │   │   ├── depend.make
+│       │   │   ├── flags.make
+│       │   │   ├── link.txt
+│       │   │   ├── progress.make
+│       │   │   └── src
+│       │   │       ├── bang.cpp.o
+│       │   │       ├── bang.cpp.o.d
+│       │   │       ├── main.cpp.o
+│       │   │       └── main.cpp.o.d
+│       │   ├── cmake.check_cache
+│       │   ├── pkgRedirects
+│       │   └── progress.marks
+│       ├── Makefile
+│       ├── bang
+│       ├── cmake_install.cmake
+│       └── generators
+│           ├── CMakePresets.json
+│           ├── cmakedeps_macros.cmake
+│           ├── conan_toolchain.cmake
+│           ├── conanbuild.sh
+│           ├── conanbuildenv-release-armv8.sh
+│           ├── conandeps_legacy.cmake
+│           ├── conanrun.sh
+│           ├── conanrunenv-release-armv8.sh
+│           ├── deactivate_conanbuild.sh
+│           └── deactivate_conanrun.sh
+
+```
 
 ## 0.1
 
