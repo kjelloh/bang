@@ -4,6 +4,16 @@ A C++ compiler utiliser to iterate cpp-file-compile command with new arguments u
 
 bang © 2025 by Kjell-Olov Högdal is licensed under Creative Commons Attribution 4.0 International. To view a copy of this license, visit https://creativecommons.org/licenses/by/4.0/
 
+Also, I would like 'bang' or additional tooling for C++ development to model and understand the C++ executable binary build and run in tiers of 'transformation'?
+
+* C++ preprocessor
+* C++ translation unit
+* C++ compilation (svere sub-steps including template instantiation, overload resolution, ...)
+* Build static and dynamic linking
+* Runtime environment linking (operating system execution of binary) 
+
+idea: A functional model of 'C++ source code' -> 'Operating system execution' should encapsulate each step as a function f: in -> out?
+
 # Investigations
 
 * [Understanding linking](linking_understanding/README.md)
