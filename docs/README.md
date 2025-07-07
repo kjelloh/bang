@@ -45,6 +45,10 @@ idea: A functional model of 'C++ source code' -> 'Operating system execution' sh
 
 # build
 
+## AI tooling support
+
+* [CLAUDE.md](../CLAUDE.md) - Comprehensive project status document generated through AI-assisted development with Claude Code Assistant. This document provides developers with a complete overview of the project architecture, current implementation status, testing framework, and future expansion potential. It serves as both a technical reference and project roadmap, making it easier for developers to understand the codebase structure and contribute effectively.
+
 ## conan/cmake framework
 
 This project supports Cmake and Conan package manager.
